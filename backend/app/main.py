@@ -38,7 +38,7 @@ app.include_router(groups.router)
 app.include_router(payments.router)
 
 
-@app.get("/health")
+@app.api_route("/health", methods=["GET", "HEAD"])
 async def health():
     async with db.pool.acquire() as conn:
         await conn.fetchval("SELECT 1")
@@ -78,7 +78,8 @@ async def group_socket(ws: WebSocket, group_id: UUID, token: str = ""):
 if settings.static_dir and Path(settings.static_dir).is_dir():
     static_root = Path(settings.static_dir).resolve()
 
-    @app.get("/{path:path}", include_in_schema=False)
+    # HEAD too: uptime monitors and link-preview bots probe with it.
+    @app.api_route("/{path:path}", methods=["GET", "HEAD"], include_in_schema=False)
     async def spa(path: str):
         candidate = (static_root / path).resolve()
         if path and candidate.is_file() and static_root in candidate.parents:
