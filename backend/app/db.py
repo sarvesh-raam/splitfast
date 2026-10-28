@@ -1,5 +1,6 @@
 import json
 from pathlib import Path
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 import asyncpg
 
@@ -13,9 +14,17 @@ async def _init_conn(conn: asyncpg.Connection) -> None:
     await conn.set_type_codec("jsonb", encoder=json.dumps, decoder=json.loads, schema="pg_catalog")
 
 
+def _clean_dsn(dsn: str) -> str:
+    # asyncpg forwards unknown query params as server settings, so libpq-only
+    # options like Neon's channel_binding=require would make Postgres reject the login.
+    parts = urlsplit(dsn)
+    query = [(k, v) for k, v in parse_qsl(parts.query) if k != "channel_binding"]
+    return urlunsplit(parts._replace(query=urlencode(query)))
+
+
 async def connect(dsn: str) -> asyncpg.Pool:
     global pool
-    pool = await asyncpg.create_pool(dsn, min_size=1, max_size=10, init=_init_conn)
+    pool = await asyncpg.create_pool(_clean_dsn(dsn), min_size=1, max_size=10, init=_init_conn)
     await migrate(pool)
     return pool
 
