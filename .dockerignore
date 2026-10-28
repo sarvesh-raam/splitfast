@@ -8,3 +8,5 @@ frontend/dist
 .git
 docs
 .env
+.env.local
+.neon

@@ -1,0 +1,22 @@
+# Render Blueprint: New -> Blueprint -> pick this repo.
+services:
+  - type: web
+    name: splitfast
+    runtime: docker
+    plan: free
+    region: singapore  # same region as the Neon database (ap-southeast-1)
+    healthCheckPath: /health
+    envVars:
+      - key: ENV
+        value: prod
+      - key: JWT_SECRET
+        generateValue: true
+      # Neon's direct URL (no -pooler): `neon connection-string`. Render asks for it on first deploy.
+      - key: DATABASE_URL
+        sync: false
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
