@@ -1,0 +1,29 @@
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: splitfast
+      POSTGRES_PASSWORD: splitfast
+      POSTGRES_DB: splitfast
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U splitfast"]
+      interval: 2s
+      retries: 20
+
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    env_file:
+      - path: .env
+        required: false
+    environment:
+      DATABASE_URL: postgresql://splitfast:splitfast@db:5432/splitfast
+    depends_on:
+      db:
+        condition: service_healthy
+
+volumes:
+  pgdata:
